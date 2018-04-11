@@ -2,6 +2,7 @@ import numpy as np
 from random import shuffle
 from past.builtins import xrange
 
+
 def softmax_loss_naive(W, X, y, reg):
   """
   Softmax loss function, naive implementation (with loops)
@@ -23,6 +24,8 @@ def softmax_loss_naive(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  num_train = X.shape[0]
+  num_class = W.shape[1]
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using explicit loops.     #
@@ -30,7 +33,24 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  for i in range(num_train):
+    training_ex_i = X[i, :]
+    f = training_ex_i.dot(W)
+    log_sum = np.sum(np.exp(f))
+    for j in range(num_class):
+      if j == y[i]:
+        loss -= f[y[i]]
+      else:
+        dW[:, j] += 1 / log_sum * np.exp(f[j]) * training_ex_i
+    loss += np.log(log_sum)
+    dW[:, y[i]] += training_ex_i * (
+        -1 + 1 / log_sum * np.exp(f[y[i]]))
+
+  # add regularization and average
+  loss /= num_train
+  loss += reg * np.sum(W ** 2)
+  dW /= num_train
+  dW += 2 * reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -47,6 +67,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  num_train = X.shape[0]
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
@@ -54,10 +75,20 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  f = X.dot(W)
+  f -= np.max(f)  # for numerical stability
+  p = np.exp(f) / np.sum(np.exp(f), 1).reshape(num_train, 1)
+  p_yi = p[np.arange(num_train), y]
+  loss = np.mean(-np.log(p_yi)) + reg * np.sum(W ** 2)
+
+  p[np.arange(num_train), y] -= 1
+  dW = X.T.dot(p)
+
+  # add regularization and average
+  dW /= num_train
+  dW += 2 * reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
 
   return loss, dW
-

@@ -1,7 +1,6 @@
 import numpy as np
 from random import shuffle
 from past.builtins import xrange
-from numba import cuda, float32
 
 
 def svm_loss_naive(W, X, y, reg):
@@ -60,7 +59,6 @@ def svm_loss_naive(W, X, y, reg):
   return loss, dW
 
 
-@cuda.jit(device=True)
 def svm_loss_vectorized(W, X, y, reg):
   """
   Structured SVM loss function, vectorized implementation.
