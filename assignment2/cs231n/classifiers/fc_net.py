@@ -203,8 +203,8 @@ class FullyConnectedNet(object):
             self.params['W' + str(i)] = np.random.normal(mu, sigma, size_W)
             self.params['b' + str(i)] = np.zeros(size_b)
             if self.use_batchnorm & (i < num_layers):
-                self.params['gamma' + str(i)] = np.ones(size_b)
-                self.params['beta' + str(i)] = np.zeros(size_b)
+                self.params['gamma' + str(i - 1)] = np.ones(size_b)
+                self.params['beta' + str(i - 1)] = np.zeros(size_b)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -271,8 +271,8 @@ class FullyConnectedNet(object):
             b = self.params['b' + str(i)]
             # use the batch norm layer
             if self.use_batchnorm:
-                gamma = self.params['gamma' + str(i)]
-                beta = self.params['beta' + str(i)]
+                gamma = self.params['gamma' + str(i - 1)]
+                beta = self.params['beta' + str(i - 1)]
                 output_data, cache = affine_batchnorm_relu_forward(input_data, W, b, gamma, beta, self.bn_params[i - 1])
             else:
                 h, cache_affine = affine_forward(input_data, W, b)
@@ -327,9 +327,13 @@ class FullyConnectedNet(object):
             cache = caches[i]
 
             if self.use_batchnorm:
-                gamma_name = 'ga'
-            dout = relu_backward(dout, cache_relu)
-            dout, grads[W_name], grads[b_name] = affine_backward(dout, cache_affine)
+                gamma_name = 'gamma' + str(i - 1)
+                beta_name = 'beta' + str(i - 1)
+                dout, grads[W_name], grads[b_name], grads[gamma_name], grads[beta_name] = affine_batchnorm_relu_backward(dout, cache)
+            else:
+                cache_affine, cache_relu = cache
+                dout = relu_backward(dout, cache_relu)
+                dout, grads[W_name], grads[b_name] = affine_backward(dout, cache_affine)
 
             # add regualizations
             W = self.params[W_name]
