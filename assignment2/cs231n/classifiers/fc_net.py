@@ -278,9 +278,11 @@ class FullyConnectedNet(object):
                 h, cache_affine = affine_forward(input_data, W, b)
                 output_data, cache_relu = relu_forward(h)
                 cache = [cache_affine, cache_relu]
+            if self.use_dropout:
+                output_data, cache_dropout = dropout_forward(output_data, self.dropout_param)
+                cache += [cache_dropout]
 
             caches[i] = cache
-
             # update the input_data for the next layer
             input_data = output_data
 
@@ -326,6 +328,10 @@ class FullyConnectedNet(object):
             b_name = 'b' + str(i)
             cache = caches[i]
 
+            if self.use_dropout:
+                cache_dropout = cache[-1]
+                cache = cache[:2]
+                dout = dropout_backward(dout, cache_dropout)
             if self.use_batchnorm:
                 gamma_name = 'gamma' + str(i - 1)
                 beta_name = 'beta' + str(i - 1)
